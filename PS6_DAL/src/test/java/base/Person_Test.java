@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
@@ -20,26 +21,26 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Person_Test {
-		
+
 	private static PersonDomainModel person1;
-	private static UUID person1UUID = UUID.randomUUID();			
-	
+	private static UUID person1UUID = UUID.randomUUID();
+
 	@BeforeClass
-	public static void personInstance() throws Exception{
-		
+	public static void personInstance() throws Exception {
+
 		Date person1Birth = null;
 
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		
-		 person1 = new PersonDomainModel();
-		 
+
+		person1 = new PersonDomainModel();
+
 		try {
 			person1Birth = dateFormat.parse("1994-11-27");
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		person1.setPersonID(person1UUID);
 		person1.setFirstName("Mingkun");
 		person1.setMiddleName("a");
@@ -48,9 +49,52 @@ public class Person_Test {
 		person1.setCity("Elkton");
 		person1.setStreet("702 Stone Gate Blvd");
 		person1.setPostalCode(21921);
-		
+
+	}
+
+	@AfterClass
+	public static void TearDownAfterClass() throws Exception {
+		ArrayList<PersonDomainModel> persons;
+		persons = PersonDAL.getPersons();
+		for (PersonDomainModel p : persons) {
+			PersonDAL.deletePerson(p.getPersonID());
+		}
+	}
+
+	@Test
+	public void testGetPerson() {
+		PersonDAL.addPerson(person1);
+		assertEquals(person1UUID, (PersonDAL.getPerson(person1UUID)).getPersonID());
 	}
 	
+	@Test
+	public void testAddPerson() {
+		PersonDAL.addPerson(person1);
+		assertEquals(person1.getPersonID(),(PersonDAL.getPerson(person1UUID).getPersonID()));
+	}
 	
-
+	@Test
+	public void testDeletePerson() {
+		ArrayList<PersonDomainModel> persons;
+		PersonDAL.addPerson(person1);
+		persons = PersonDAL.getPersons();
+		
+		assertTrue(persons.size() == 1);
+		
+		
+		PersonDAL.deletePerson(person1.getPersonID());
+		persons = PersonDAL.getPersons();
+		
+		assertTrue(persons.size() == 0);
+	}
+	
+	@Test
+	public void testUpdatePerson() {
+		PersonDAL.addPerson(person1);
+		assertEquals("Chen",(PersonDAL.getPerson(person1.getPersonID())).getLastName());
+		person1.setLastName("Smith");
+		
+		PersonDAL.updatePerson(person1);
+		assertEquals("Smith", (PersonDAL.getPerson(person1.getPersonID())).getLastName());
+	}
 }
